@@ -10,27 +10,31 @@
           .state ('home', {
             url: '/home',
             templateUrl: '/home.html',
-            controller: 'MainCtrl'
+            controller: 'MainCtrl as main'
           })
           .state('posts', {
             url: '/posts/{id}',
             templateUrl: '/posts.html',
-            controller: 'PostsCtrl'
+            controller: 'PostsCtrl as postsComments'
           })
         $urlRouterProvider.otherwise('home')
       }])
 
   // service function definitions
   function posts(){
-    var o = {posts: []}
-    return o
+    var appdata = {}
+    appdata.posts = []
+    appdata.incrementUpvotes = function(post) {
+      post.upvotes += 1
+    }
+    return appdata
   }
 
   // controller function definitions
-  function MainCtrl($scope, posts){
-    $scope.posts = posts.posts
+  function MainCtrl($scope,posts){
+    var self = this
 
-    $scope.posts = [
+    posts.posts = [
       {title: 'post 1', upvotes: 5},
       {title: 'post 2', upvotes: 2},
       {title: 'post 3', upvotes: 15},
@@ -38,9 +42,11 @@
       {title: 'post 5', upvotes: 4}
     ]
 
-    $scope.addPost = function(){
+    self.posts = posts.posts
+
+    self.addPost = function(){
       if(!$scope.title || $scope.title === '') {return}
-      $scope.posts.push({
+      self.posts.push({
         title: $scope.title,
         link: $scope.link,
         upvotes: 0,
@@ -53,15 +59,29 @@
       $scope.link = ''
     }
 
-    $scope.incrementUpvotes = function(post){
-      post.upvotes += 1
+    self.incrementUpvotes = function(post){
+      posts.incrementUpvotes(post)
     }
   }
 
   function PostsCtrl($scope,$stateParams,posts){
-    $scope.posts = posts.posts
+    var self = this
+
     $scope.post = posts.posts[$stateParams.id]
-    console.log(posts.posts.length)
+
+    self.addComment = function(){
+      if($scope.body === '') {return}
+        $scope.post.comments.push({
+        body: $scope.body,
+        author: 'user',
+        upvotes: 0
+      })
+      $scope.body = ''
+    }
+
+    self.incrementUpvotes = function(comment){
+      posts.incrementUpvotes(comment)
+    }
   }
 
 })()
